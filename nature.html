@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Природные опасности - Викторина</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { font-family: 'Unbounded', sans-serif; }
+
+        .game-wrapper {
+            max-width: 1000px;
+            width: 100%;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+        }
+
+        .hazard-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 2rem;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: grid;
+            grid-template-columns: 1fr 250px 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .description-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 1.5rem;
+            font-style: italic;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .photo-drop-zone {
+            height: 180px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .action-drop-zone {
+            min-height: 120px;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 1rem;
+            transition: 0.3s;
+        }
+
+        .action-drop-zone.locked {
+            opacity: 0.3;
+            pointer-events: none;
+            background: rgba(0,0,0,0.4);
+        }
+
+        .draggable-photo {
+            width: 220px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 1rem;
+            cursor: grab;
+            border: 3px solid white;
+        }
+
+        .draggable-action {
+            background: #ffffff;
+            color: #0f172a;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            cursor: grab;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .pool {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 2rem;
+            width: 100%;
+            margin-top: 2rem;
+        }
+
+        .success-mark {
+            display: none;
+            color: #22c55e;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            margin-top: 5px;
+        }
+
+        #win-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="py-8 text-center">
+        <a href="index.html" class="text-blue-400 hover:text-blue-300 text-sm mb-4 inline-block">← На главную</a>
+        <h1 class="text-3xl md:text-4xl font-bold uppercase tracking-tight">Природные опасности</h1>
+        <p class="text-slate-400 mt-2">Угадай явление по описанию, подбери фото и найди верные действия</p>
+    </header>
+
+    <div class="game-wrapper">
+        
+        <!-- Секция Землетрясение -->
+        <section class="hazard-section" id="section-earthquake">
+            <div class="description-box">
+                «Подземные толчки и колебания земной поверхности, возникающие в результате внезапных смещений и разрывов в земной коре...»
+            </div>
+            
+            <div class="photo-drop-zone" data-type="photo" data-correct="earthquake">
+                <span class="text-xs text-center px-4 opacity-50">Перетащи фото сюда</span>
+            </div>
+
+            <div class="action-drop-zone locked" data-type="action" data-correct="earthquake">
+                <span class="text-xs opacity-50 text-center">Сначала вставь фото</span>
+            </div>
+        </section>
+
+        <!-- Секция Наводнение -->
+        <section class="hazard-section" id="section-flood">
+            <div class="description-box">
+                «Значительное затопление местности в результате подъема уровня воды в реке, озере или море в период снеготаяния, ливней...»
+            </div>
+            
+            <div class="photo-drop-zone" data-type="photo" data-correct="flood">
+                <span class="text-xs text-center px-4 opacity-50">Перетащи фото сюда</span>
+            </div>
+
+            <div class="action-drop-zone locked" data-type="action" data-correct="flood">
+                <span class="text-xs opacity-50 text-center">Сначала вставь фото</span>
+            </div>
+        </section>
+
+        <!-- Общий пул ресурсов -->
+        <div class="pool">
+            <div class="mb-6">
+                <h3 class="text-sm font-bold uppercase mb-4 text-blue-400">Фотографии:</h3>
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <img src="https://img.freepik.com/free-vector/concept-earthquake-damage-house_1308-131029.jpg?semt=ais_hybrid&w=740&q=80" 
+                         class="draggable-photo" draggable="true" data-id="earthquake" alt="Землетрясение">
+                    <img src="https://www.shutterstock.com/image-vector/realistic-digital-illustration-depicts-houses-260nw-2728660741.jpg" 
+                         class="draggable-photo" draggable="true" data-id="flood" alt="Наводнение">
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-sm font-bold uppercase mb-4 text-emerald-400">Действия:</h3>
+                <div class="flex flex-wrap gap-3 justify-center">
+                    <div class="draggable-action" draggable="true" data-target="earthquake">Встать в дверной проем или под стол</div>
+                    <div class="draggable-action" draggable="true" data-target="earthquake">Отойти от окон и тяжелой мебели</div>
+                    <div class="draggable-action" draggable="true" data-target="flood">Подняться на верхние этажи или чердаки</div>
+                    <div class="draggable-action" draggable="true" data-target="flood">Отключить газ, воду и электричество</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="win-modal">
+        <h2 class="text-6xl font-black text-emerald-500 mb-4">БРАВО!</h2>
+        <p class="text-2xl text-slate-300">Вы отлично разбираетесь в природных угрозах!</p>
+        <button onclick="location.reload()" class="mt-10 bg-blue-600 px-10 py-4 rounded-full font-bold hover:bg-blue-500 transition">Повторить</button>
+    </div>
+
+    <script>
+        let draggedElement = null;
+
+        document.addEventListener('dragstart', (e) => {
+            draggedElement = e.target;
+            e.target.style.opacity = '0.5';
+        });
+
+        document.addEventListener('dragend', (e) => {
+            e.target.style.opacity = '1';
+        });
+
+        document.querySelectorAll('.photo-drop-zone, .action-drop-zone').forEach(zone => {
+            zone.addEventListener('dragover', (e) => e.preventDefault());
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const type = zone.dataset.type;
+                const correctId = zone.dataset.correct;
+
+                // Логика для ФОТО
+                if (type === 'photo' && draggedElement.tagName === 'IMG') {
+                    if (draggedElement.dataset.id === correctId) {
+                        zone.innerHTML = '';
+                        const newImg = draggedElement.cloneNode(true);
+                        newImg.style.width = '100%';
+                        newImg.style.height = '100%';
+                        newImg.setAttribute('draggable', 'false');
+                        zone.appendChild(newImg);
+                        zone.style.border = 'none';
+                        draggedElement.remove();
+                        
+                        // Разблокируем зону действий
+                        const actionZone = zone.parentElement.querySelector('.action-drop-zone');
+                        actionZone.classList.remove('locked');
+                        actionZone.innerHTML = '<span class="text-[10px] text-emerald-400 font-bold uppercase">Теперь вставь действия</span>';
+                        checkWin();
+                    } else {
+                        flashError(zone);
+                    }
+                }
+
+                // Логика для ДЕЙСТВИЙ
+                if (type === 'action' && draggedElement.classList.contains('draggable-action')) {
+                    if (draggedElement.dataset.target === correctId) {
+                        if(zone.querySelector('span')) zone.querySelector('span').remove();
+                        zone.appendChild(draggedElement);
+                        draggedElement.setAttribute('draggable', 'false');
+                        draggedElement.style.width = '100%';
+                        checkWin();
+                    } else {
+                        flashError(zone);
+                    }
+                }
+            });
+        });
+
+        function flashError(zone) {
+            zone.style.borderColor = '#ef4444';
+            zone.style.background = 'rgba(239, 68, 68, 0.1)';
+            setTimeout(() => {
+                zone.style.borderColor = '';
+                zone.style.background = '';
+            }, 500);
+        }
+
+        function checkWin() {
+            const photosLeft = document.querySelectorAll('.pool img').length;
+            const actionsLeft = document.querySelectorAll('.pool .draggable-action').length;
+            
+            if (photosLeft === 0 && actionsLeft === 0) {
+                setTimeout(() => {
+                    document.getElementById('win-modal').style.display = 'flex';
+                }, 500);
+            }
+        }
+    </script>
+</body>
+</html>
