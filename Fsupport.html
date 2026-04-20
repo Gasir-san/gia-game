@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симулятор: Ушибы и Ссадины</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { font-family: 'Unbounded', sans-serif; }
+
+        .patient-card {
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s ease;
+        }
+
+        .tool-btn {
+            transition: all 0.2s ease;
+            filter: grayscale(0.5);
+        }
+
+        .tool-btn:hover:not(:disabled) {
+            filter: grayscale(0);
+            transform: scale(1.1);
+        }
+
+        .tool-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+
+        .tool-btn.used {
+            filter: grayscale(0);
+            border: 3px solid #22c55e;
+            background: #f0fdf4;
+        }
+
+        .step-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .step-indicator.active {
+            background: #22c55e;
+            box-shadow: 0 0 10px #22c55e;
+        }
+
+        #feedback {
+            animation: slideUp 0.3s ease-out;
+            z-index: 50;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translate(-50%, 10px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <header class="text-center py-6">
+        <a href="index.html" class="text-blue-600 hover:underline text-sm font-bold uppercase tracking-widest">← На главную</a>
+        <h1 class="text-2xl md:text-3xl font-bold mt-2 uppercase">Виртуальный спасатель</h1>
+    </header>
+
+    <main class="max-w-4xl w-full grid grid-cols-1 md:grid-cols-3 gap-8 mt-4">
+        
+        <!-- Левая колонка: Пациент -->
+        <div class="md:col-span-2">
+            <div class="patient-card p-8 h-full flex flex-col items-center text-center">
+                <div id="injury-icon" class="text-8xl mb-6">🩹</div>
+                <h2 id="injury-title" class="text-2xl font-black mb-2 uppercase">Загрузка...</h2>
+                <p id="injury-desc" class="text-slate-500 mb-8 max-w-sm">Описание травмы</p>
+                
+                <!-- Прогресс шагов -->
+                <div class="flex gap-3 mb-8" id="steps-container">
+                    <!-- Точки прогресса -->
+                </div>
+
+                <div id="action-zone" class="w-full border-2 border-dashed border-slate-200 rounded-3xl p-6 min-h-[100px] flex flex-col items-center justify-center text-slate-400">
+                    <span id="instruction-text" class="italic">Выбери все необходимые инструменты для этого случая (порядок не важен)</span>
+                    <div id="applied-tools" class="flex flex-wrap gap-2 mt-4"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Правая колонка: Аптечка -->
+        <div class="bg-white p-6 rounded-[2rem] shadow-lg border border-slate-100">
+            <h3 class="font-bold uppercase text-xs tracking-widest text-slate-400 mb-6 text-center">Ваша Аптечка</h3>
+            <div class="grid grid-cols-2 gap-4" id="toolbox">
+                <button onclick="useTool('ice')" id="btn-ice" class="tool-btn flex flex-col items-center p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                    <span class="text-3xl mb-1">🧊</span>
+                    <span class="text-[10px] font-bold uppercase">Лед в ткани</span>
+                </button>
+                <button onclick="useTool('bandage')" id="btn-bandage" class="tool-btn flex flex-col items-center p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                    <span class="text-3xl mb-1">🩹</span>
+                    <span class="text-[10px] font-bold uppercase">Пластырь</span>
+                </button>
+                <button onclick="useTool('water')" id="btn-water" class="tool-btn flex flex-col items-center p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                    <span class="text-3xl mb-1">💧</span>
+                    <span class="text-[10px] font-bold uppercase">Промыть водой</span>
+                </button>
+                <button onclick="useTool('antiseptic')" id="btn-antiseptic" class="tool-btn flex flex-col items-center p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                    <span class="text-3xl mb-1">🧪</span>
+                    <span class="text-[10px] font-bold uppercase">Антисептик</span>
+                </button>
+                <button onclick="useTool('pressure')" id="btn-pressure" class="tool-btn flex flex-col items-center p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                    <span class="text-3xl mb-1">🧤</span>
+                    <span class="text-[10px] font-bold uppercase">Давящая повязка</span>
+                </button>
+                <button onclick="useTool('heater')" id="btn-heater" class="tool-btn flex flex-col items-center p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                    <span class="text-3xl mb-1">🔥</span>
+                    <span class="text-[10px] font-bold uppercase">Грелка</span>
+                </button>
+                <button onclick="useTool('needle')" id="btn-needle" class="tool-btn flex flex-col items-center p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                    <span class="text-3xl mb-1">🪡</span>
+                    <span class="text-[10px] font-bold uppercase">Игла</span>
+                </button>
+                <button onclick="useTool('rest')" id="btn-rest" class="tool-btn flex flex-col items-center p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                    <span class="text-3xl mb-1">🛏️</span>
+                    <span class="text-[10px] font-bold uppercase">Покой и подъем</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Сообщения -->
+    <div id="feedback" class="fixed bottom-10 left-1/2 -translate-x-1/2 max-w-md w-full px-6 hidden">
+        <div id="feedback-content" class="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border-l-4 border-blue-500">
+            Сообщение...
+        </div>
+    </div>
+
+    <script>
+        const scenarios = [
+            {
+                type: 'ушиб',
+                title: 'Сильный ушиб ноги',
+                desc: 'Пациент ударился о край стола. Виден отек и начинает формироваться гематома.',
+                icon: '🦵',
+                requiredTools: ['rest', 'ice', 'pressure'],
+                messages: {
+                    rest: 'Правильно! Обеспечиваем покой и возвышенное положение.',
+                    ice: 'Верно! Прикладываем холод через ткань.',
+                    pressure: 'Отлично! Накладываем давящую повязку.',
+                    error_heater: 'ОШИБКА! Нельзя греть ушиб в первые 48 часов — это увеличит отек!',
+                    error_needle: 'ОШИБКА! Категорически нельзя вскрывать гематомы!'
+                }
+            },
+            {
+                type: 'ссадина',
+                title: 'Грязная ссадина на локте',
+                desc: 'Пациент упал на асфальт. Рана загрязнена, идет небольшое кровотечение.',
+                icon: '🦾',
+                requiredTools: ['water', 'antiseptic', 'bandage'],
+                messages: {
+                    water: 'Правильно! Очищаем рану водой или перекисью.',
+                    antiseptic: 'Верно! Обрабатываем края раны антисептиком.',
+                    bandage: 'Отлично! Закрываем рану стерильной повязкой.',
+                    error_ice: 'При ссадине лед не является приоритетом первой помощи.',
+                    error_pressure: 'Давящая повязка нужна при сильном кровотечении, здесь достаточно пластыря.'
+                }
+            }
+        ];
+
+        let currentScenarioIdx = 0;
+        let appliedTools = [];
+
+        function initGame() {
+            const sc = scenarios[currentScenarioIdx];
+            appliedTools = [];
+            
+            document.getElementById('injury-icon').textContent = sc.icon;
+            document.getElementById('injury-title').textContent = sc.title;
+            document.getElementById('injury-desc').textContent = sc.desc;
+            document.getElementById('applied-tools').innerHTML = '';
+            
+            // Сброс кнопок
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.remove('used');
+                btn.disabled = false;
+            });
+
+            const stepsCont = document.getElementById('steps-container');
+            stepsCont.innerHTML = '';
+            sc.requiredTools.forEach(() => {
+                const dot = document.createElement('div');
+                dot.className = 'step-indicator';
+                stepsCont.appendChild(dot);
+            });
+        }
+
+        function updateProgress() {
+            const sc = scenarios[currentScenarioIdx];
+            const dots = document.querySelectorAll('.step-indicator');
+            dots.forEach((dot, i) => {
+                dot.className = i < appliedTools.length ? 'step-indicator active' : 'step-indicator';
+            });
+
+            if (appliedTools.length === sc.requiredTools.length) {
+                setTimeout(nextLevel, 1500);
+            }
+        }
+
+        function showFeedback(text, isError = false) {
+            const fb = document.getElementById('feedback');
+            const cont = document.getElementById('feedback-content');
+            cont.textContent = text;
+            cont.style.borderColor = isError ? '#ef4444' : '#22c55e';
+            fb.classList.remove('hidden');
+            setTimeout(() => fb.classList.add('hidden'), 3000);
+        }
+
+        function useTool(tool) {
+            const sc = scenarios[currentScenarioIdx];
+            
+            // Проверка на фатальные ошибки
+            if (tool === 'heater' && sc.type === 'ушиб') {
+                showFeedback(sc.messages.error_heater, true);
+                return;
+            }
+            if (tool === 'needle') {
+                showFeedback(sc.messages.error_needle, true);
+                return;
+            }
+
+            // Если инструмент уже применен
+            if (appliedTools.includes(tool)) return;
+
+            // Проверка: является ли инструмент правильным для этого сценария
+            if (sc.requiredTools.includes(tool)) {
+                appliedTools.push(tool);
+                showFeedback(sc.messages[tool]);
+                
+                const btn = document.getElementById(`btn-${tool}`);
+                btn.classList.add('used');
+                btn.disabled = true;
+
+                // Визуализация в зоне действий
+                const toolBadge = document.createElement('span');
+                toolBadge.className = 'px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold border border-green-200 animate-bounce';
+                toolBadge.textContent = '✓ ' + btn.querySelector('span:last-child').textContent;
+                document.getElementById('applied-tools').appendChild(toolBadge);
+
+                updateProgress();
+            } else {
+                showFeedback('Этот инструмент сейчас не поможет или может навредить.', true);
+            }
+        }
+
+        function nextLevel() {
+            currentScenarioIdx++;
+            if (currentScenarioIdx < scenarios.length) {
+                initGame();
+                showFeedback('Прекрасная работа! Помогите следующему пациенту.');
+            } else {
+                document.querySelector('main').innerHTML = `
+                    <div class="col-span-full text-center py-20 bg-white rounded-[3rem] shadow-xl">
+                        <span class="text-7xl">🏆</span>
+                        <h2 class="text-4xl font-black mt-6 uppercase">Вы — Мастер первой помощи!</h2>
+                        <p class="text-slate-500 mt-2">Вы успешно и профессионально обработали все травмы.</p>
+                        <button onclick="location.reload()" class="mt-10 bg-blue-600 text-white px-10 py-4 rounded-full font-bold shadow-lg hover:bg-blue-700 transition">Начать заново</button>
+                    </div>
+                `;
+            }
+        }
+
+        initGame();
+    </script>
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Битва Знаний: Первая помощь при отравлениях</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        h1, h2, .score-val { font-family: 'Unbounded', sans-serif; }
+
+        .team-card {
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .team-card.active {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+        }
+
+        .answer-btn {
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .answer-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .timer-critical {
+            color: #ef4444;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .correct { background: #166534 !important; border-color: #22c55e !important; }
+        .wrong { background: #991b1b !important; border-color: #ef4444 !important; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Header & Global Timer -->
+    <header class="flex flex-col items-center mb-8">
+        <a href="index.html" class="text-blue-400 hover:text-blue-300 text-xs mb-4 uppercase tracking-widest font-bold">← На главную</a>
+        <h1 class="text-2xl md:text-4xl font-bold text-center uppercase mb-4">Отравление лекарствами и химией</h1>
+        
+        <div class="bg-slate-800 px-8 py-3 rounded-2xl border border-white/10 flex flex-col items-center shadow-xl">
+            <span class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Осталось времени</span>
+            <span id="global-timer" class="text-3xl font-black">01:30</span>
+        </div>
+    </header>
+
+    <!-- Battle Arena -->
+    <main class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto w-full">
+        
+        <!-- Команда А -->
+        <div id="team-0" class="team-card rounded-[2.5rem] p-6 md:p-8 bg-slate-900/40 relative active">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-blue-400 font-bold uppercase tracking-wider">Команда А</h2>
+                <div class="text-right">
+                    <span class="text-[10px] block text-slate-500 uppercase">Счет</span>
+                    <span id="score-0" class="score-val text-3xl font-black">0</span>
+                </div>
+            </div>
+            
+            <div id="q-container-0">
+                <div class="min-h-[100px] mb-6">
+                    <p id="q-text-0" class="text-lg md:text-xl font-medium">Загрузка вопроса...</p>
+                </div>
+                <div id="answers-0" class="grid grid-cols-1 gap-3"></div>
+            </div>
+            
+            <div id="finished-0" class="hidden text-center py-10">
+                <span class="text-5xl">✅</span>
+                <p class="mt-4 font-bold text-slate-400">Все вопросы пройдены!</p>
+            </div>
+        </div>
+
+        <!-- Команда Б -->
+        <div id="team-1" class="team-card rounded-[2.5rem] p-6 md:p-8 bg-slate-900/40 relative">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-rose-400 font-bold uppercase tracking-wider">Команда Б</h2>
+                <div class="text-right">
+                    <span class="text-[10px] block text-slate-500 uppercase">Счет</span>
+                    <span id="score-1" class="score-val text-3xl font-black">0</span>
+                </div>
+            </div>
+            
+            <div id="q-container-1">
+                <div class="min-h-[100px] mb-6">
+                    <p id="q-text-1" class="text-lg md:text-xl font-medium">Загрузка вопроса...</p>
+                </div>
+                <div id="answers-1" class="grid grid-cols-1 gap-3"></div>
+            </div>
+
+            <div id="finished-1" class="hidden text-center py-10">
+                <span class="text-5xl">✅</span>
+                <p class="mt-4 font-bold text-slate-400">Все вопросы пройдены!</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Overlay Results -->
+    <div id="result-overlay" class="fixed inset-0 bg-slate-950/fb backdrop-blur-xl z-50 hidden flex-col items-center justify-center p-6 text-center">
+        <h2 class="text-6xl font-black mb-2 uppercase tracking-tighter">Финал!</h2>
+        <div id="winner-text" class="text-2xl text-blue-400 font-bold mb-10">Команда А победила!</div>
+        
+        <div class="flex gap-12 mb-12">
+            <div>
+                <div class="text-slate-500 uppercase text-xs font-bold mb-1">Команда А</div>
+                <div id="final-0" class="text-5xl font-black">0</div>
+            </div>
+            <div class="w-px h-16 bg-white/10"></div>
+            <div>
+                <div class="text-slate-500 uppercase text-xs font-bold mb-1">Команда Б</div>
+                <div id="final-1" class="text-5xl font-black">0</div>
+            </div>
+        </div>
+
+        <button onclick="location.reload()" class="bg-white text-black px-12 py-4 rounded-full font-bold hover:scale-105 transition-transform">ИГРАТЬ СНОВА</button>
+    </div>
+
+    <script>
+        const questionsData = [
+            // Команда А
+            [
+                { q: "Каков номер скорой помощи в Казахстане?", a: ["101", "103 или 112", "104", "911"], c: 1 },
+                { q: "Что нужно дать пострадавшему от лекарств для вывода токсинов?", a: ["Крепкий чай", "Стакан молока", "Сорбенты (активированный уголь)", "Раствор соды"], c: 2 },
+                { q: "При каком условии НЕЛЬЗЯ вызывать рвоту?", a: ["Человек без сознания", "Человек выпил много воды", "У человека бледность", "Прошло более 5 минут"], c: 0 },
+                { q: "Как рассчитывается доза активированного угля?", a: ["1 таблетка на 10 кг массы тела", "5 таблеток сразу всем", "1 таблетка в час", "По инструкции на упаковке"], c: 0 },
+                { q: "Что делать, если химия попала в глаза?", a: ["Протереть сухой салфеткой", "Промывать водой 15-20 минут", "Закрыть глаза повязкой", "Закапать любые капли"], c: 1 },
+                { q: "Симптомом отравления лекарствами является:", a: ["Сонливость и тошнота", "Высокая энергия", "Сильный голод", "Зуд в руках"], c: 0 },
+                { q: "Первое действие при проглатывании лекарств в сознании?", a: ["Лечь спать", "Выпить сок", "Промыть желудок (2-3 стакана воды и рвота)", "Поесть"], c: 2 },
+                { q: "Нужно ли сохранять упаковку от лекарства для врача?", a: ["Только если оно дорогое", "Только если оно импортное", "Да, это очень важно", "Нет, это не нужно"], c: 3 },
+                { q: "Что делать при вдыхании паров бытовой химии?", a: ["Вынести на свежий воздух", "Дать горячий чай", "Заставить бегать", "Уложить на живот"], c: 0 },
+                { q: "Можно ли оставлять пострадавшего одного?", a: ["Да, если идете в аптеку", "Нет, нельзя", "Да, если он спит", "Только на 5 минут"], c: 1 }
+            ],
+            // Команда Б
+            [
+                { q: "Что НЕЛЬЗЯ делать при ожоге щелочью внутри?", a: ["Полоскать рот", "Вызывать рвоту", "Пить воду", "Звонить в скорую"], c: 1 },
+                { q: "Как помочь при попадании химии на кожу?", a: ["Промывать большим количеством воды", "Смазать маслом", "Присыпать содой", "Наложить жгут"], c: 0 },
+                { q: "Симптом отравления бытовой химией:", a: ["Хорошее настроение", "Покраснение ушей", "Ожоги рта и резкая боль", "Онемение ног"], c: 2 },
+                { q: "Можно ли нейтрализовать кислоту щелочью внутри организма?", a: ["Да, это поможет", "Только под присмотром друга", "Только если есть сода", "Нет, это опасно"], c: 3 },
+                { q: "Что делать, если пострадавший от химии без сознания?", a: ["Пытаться напоить водой", "Трясти за плечи", "Не вызывать рвоту, ждать скорую", "Сделать промывание желудка"], c: 2 },
+                { q: "Какое средство нельзя выводить рвотой из-за риска ожога?", a: ["Стиральный порошок (пенообразующее)", "Витамины", "Аспирин", "Обычную воду"], c: 0 },
+                { q: "При отравлении бытовой химией важно:", a: ["Прекратить контакт с веществом", "Закончить уборку", "Спрятать средство от детей", "Вымыть пол"], c: 0 },
+                { q: "Если проглочена кислота, первая помощь в сознании:", a: ["Вызвать рвоту", "Выпить уксус", "Прополоскать рот и выпить воды", "Съесть сухарик"], c: 2 },
+                { q: "Как долго нужно промывать кожу при попадании химии?", a: ["Пока не высохнет", "Не менее 15-20 минут", "2 минуты", "До приезда скорой"], c: 1 },
+                { q: "Какая помощь при отравлении лекарствами важнее всего?", a: ["Немедленный вызов скорой помощи", "Поиск виноватых", "Уборка в комнате", "Звонок родителям"], c: 0 }
+            ]
+        ];
+
+        let state = {
+            scores: [0, 0],
+            currentIndex: [0, 0],
+            timeLeft: 90,
+            activeTeam: 0,
+            gameActive: true
+        };
+
+        function updateTimer() {
+            if (!state.gameActive) return;
+            
+            const m = Math.floor(state.timeLeft / 60);
+            const s = state.timeLeft % 60;
+            const display = document.getElementById('global-timer');
+            display.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            
+            if (state.timeLeft <= 10) display.classList.add('timer-critical');
+
+            if (state.timeLeft <= 0) {
+                endGame();
+            } else {
+                state.timeLeft--;
+                setTimeout(updateTimer, 1000);
+            }
+        }
+
+        function loadQuestion(teamIdx) {
+            const container = document.getElementById(`q-container-${teamIdx}`);
+            const finished = document.getElementById(`finished-${teamIdx}`);
+            
+            if (state.currentIndex[teamIdx] >= 10) {
+                container.classList.add('hidden');
+                finished.classList.remove('hidden');
+                checkAllFinished();
+                return;
+            }
+
+            const q = questionsData[teamIdx][state.currentIndex[teamIdx]];
+            document.getElementById(`q-text-${teamIdx}`).textContent = q.q;
+            
+            const answersBox = document.getElementById(`answers-${teamIdx}`);
+            answersBox.innerHTML = '';
+            
+            q.a.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn w-full p-4 rounded-2xl text-left font-semibold text-slate-300';
+                btn.textContent = opt;
+                btn.onclick = () => handleAnswer(teamIdx, i);
+                answersBox.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(teamIdx, ansIdx) {
+            if (!state.gameActive) return;
+            
+            const q = questionsData[teamIdx][state.currentIndex[teamIdx]];
+            const buttons = document.getElementById(`answers-${teamIdx}`).querySelectorAll('button');
+            
+            buttons.forEach(b => b.disabled = true);
+
+            if (ansIdx === q.c) {
+                buttons[ansIdx].classList.add('correct');
+                state.scores[teamIdx] += 100;
+            } else {
+                buttons[ansIdx].classList.add('wrong');
+                buttons[q.c].classList.add('correct');
+                state.scores[teamIdx] = Math.max(0, state.scores[teamIdx] - 50);
+            }
+
+            document.getElementById(`score-${teamIdx}`).textContent = state.scores[teamIdx];
+
+            setTimeout(() => {
+                state.currentIndex[teamIdx]++;
+                // Смена хода
+                state.activeTeam = state.activeTeam === 0 ? 1 : 0;
+                updateVisualTurn();
+                loadQuestion(teamIdx);
+            }, 1000);
+        }
+
+        function updateVisualTurn() {
+            document.getElementById('team-0').classList.toggle('active', state.activeTeam === 0);
+            document.getElementById('team-1').classList.toggle('active', state.activeTeam === 1);
+        }
+
+        function checkAllFinished() {
+            if (state.currentIndex[0] >= 10 && state.currentIndex[1] >= 10) {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            state.gameActive = false;
+            const overlay = document.getElementById('result-overlay');
+            const winText = document.getElementById('winner-text');
+            
+            document.getElementById('final-0').textContent = state.scores[0];
+            document.getElementById('final-1').textContent = state.scores[1];
+
+            if (state.scores[0] > state.scores[1]) {
+                winText.textContent = "КОМАНДА А ПОБЕДИЛА!";
+                winText.className = "text-2xl text-blue-400 font-bold mb-10";
+            } else if (state.scores[1] > state.scores[0]) {
+                winText.textContent = "КОМАНДА Б ПОБЕДИЛА!";
+                winText.className = "text-2xl text-rose-400 font-bold mb-10";
+            } else {
+                winText.textContent = "НИЧЬЯ! ОБЕ КОМАНДЫ МОЛОДЦЫ!";
+                winText.className = "text-2xl text-emerald-400 font-bold mb-10";
+            }
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+        }
+
+        // Init
+        updateTimer();
+        loadQuestion(0);
+        loadQuestion(1);
+    </script>
+</body>
+</html>

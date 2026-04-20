@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Викторина: Здоровый образ жизни</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0fdf4;
+            color: #166534;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { font-family: 'Unbounded', sans-serif; }
+
+        .quiz-card {
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .option-btn {
+            transition: all 0.2s ease;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #22c55e;
+            background: #f0fdf4;
+            transform: translateY(-2px);
+        }
+
+        .option-btn.correct {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #15803d;
+        }
+
+        .option-btn.wrong {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #b91c1c;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #22c55e;
+            transition: width 0.4s ease;
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <header class="text-center py-8">
+        <a href="index.html" class="text-green-600 hover:underline text-sm font-bold uppercase tracking-widest">← На главную</a>
+        <h1 class="text-2xl md:text-3xl font-bold mt-2 uppercase">Викторина: ЗОЖ</h1>
+    </header>
+
+    <main class="max-w-2xl w-full">
+        <div class="quiz-card p-6 md:p-10">
+            <!-- Progress -->
+            <div class="mb-8">
+                <div class="flex justify-between text-xs font-bold uppercase mb-2 text-slate-400">
+                    <span id="question-number">Вопрос 1 из 8</span>
+                    <span id="score-display">Очки: 0</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Question Area -->
+            <div id="quiz-content">
+                <h2 id="question-text" class="text-xl md:text-2xl font-bold mb-8">Загрузка вопроса...</h2>
+                <div id="options-grid" class="grid grid-cols-1 gap-4">
+                    <!-- Options will be injected here -->
+                </div>
+            </div>
+
+            <!-- Result Area (Hidden by default) -->
+            <div id="result-screen" class="hidden text-center py-10">
+                <div id="result-icon" class="text-7xl mb-6">🏆</div>
+                <h2 class="text-3xl font-black mb-2 uppercase">Результат</h2>
+                <p id="result-text" class="text-slate-500 mb-8">Вы молодец!</p>
+                <div class="bg-green-50 p-6 rounded-2xl mb-8">
+                    <div class="text-4xl font-black text-green-600" id="final-score">0/8</div>
+                    <div class="text-sm uppercase font-bold text-green-700">Верных ответов</div>
+                </div>
+                <button onclick="location.reload()" class="bg-green-600 text-white px-10 py-4 rounded-full font-bold shadow-lg hover:bg-green-700 transition">Пройти еще раз</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizData = [
+            {
+                q: "Сколько часов должен длиться здоровый сон подростка согласно режиму дня?",
+                o: ["6-7 часов", "8-10 часов", "12-14 часов", "5 часов"],
+                c: 1,
+                info: "Сон 8-10 часов позволяет избежать переутомления и восстановить силы для учебы."
+            },
+            {
+                q: "Что является фундаментом физического и психологического здоровья?",
+                o: ["Только спорт", "ЗОЖ (Здоровый образ жизни)", "Компьютерные игры", "Отдых на море"],
+                c: 1,
+                info: "ЗОЖ включает питание, активность, гигиену и позитивное мышление."
+            },
+            {
+                q: "Как часто необходимо соблюдать гигиену полости рта?",
+                o: ["Один раз в день", "Дважды в день", "Только после сладкого", "Раз в неделю"],
+                c: 1,
+                info: "Гигиена полости рта дважды в день — важная составляющая личной гигиены."
+            },
+            {
+                q: "Что следует ограничить в рационе для правильного питания?",
+                o: ["Витамины", "Воду", "Фастфуд и сахар", "Овощи"],
+                c: 2,
+                info: "Сбалансированный рацион требует ограничения сахара и фастфуда."
+            },
+            {
+                q: "В какой период особенно важен тщательный уход за кожей?",
+                o: ["В период акне", "Только зимой", "Только летом", "После 30 лет"],
+                c: 0,
+                info: "В подростковый период уход за кожей лица особенно важен."
+            },
+            {
+                q: "Что помогает организму избежать переутомления?",
+                o: ["Энергетические напитки", "Четкий режим дня", "Постоянная учеба", "Сон днем вместо ночи"],
+                c: 1,
+                info: "Четкое время для сна, учебы и отдыха — залог бодрости."
+            },
+            {
+                q: "Какие виды активности улучшают самочувствие и внешний вид?",
+                o: ["Только профессиональный спорт", "Ежедневные тренировки, прогулки, плавание", "Сидение на скамейке", "Просмотр ТВ"],
+                c: 1,
+                info: "Регулярная физическая активность — один из главных компонентов ЗОЖ."
+            },
+            {
+                q: "Что относится к эмоциональному здоровью?",
+                o: ["Умение справляться со стрессом", "Игнорирование друзей", "Много времени в телефоне", "Грубое общение"],
+                c: 0,
+                info: "Развитие позитивного мышления и борьба со стрессом укрепляют психику."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let canAnswer = true;
+
+        function loadQuestion() {
+            canAnswer = true;
+            const q = quizData[currentQuestion];
+            document.getElementById('question-number').textContent = `Вопрос ${currentQuestion + 1} из ${quizData.length}`;
+            document.getElementById('question-text').textContent = q.q;
+            document.getElementById('progress-fill').style.width = `${(currentQuestion / quizData.length) * 100}%`;
+            
+            const optionsGrid = document.getElementById('options-grid');
+            optionsGrid.innerHTML = '';
+            
+            q.o.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn p-4 rounded-2xl text-left font-medium';
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(index);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(idx) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const q = quizData[currentQuestion];
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            if (idx === q.c) {
+                buttons[idx].classList.add('correct');
+                score++;
+            } else {
+                buttons[idx].classList.add('wrong');
+                buttons[q.c].classList.add('correct');
+            }
+
+            document.getElementById('score-display').textContent = `Очки: ${score}`;
+
+            setTimeout(() => {
+                currentQuestion++;
+                if (currentQuestion < quizData.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }, 2000);
+        }
+
+        function showResults() {
+            document.getElementById('progress-fill').style.width = '100%';
+            document.getElementById('quiz-content').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-score').textContent = `${score}/${quizData.length}`;
+            
+            const resultText = document.getElementById('result-text');
+            if (score === quizData.length) {
+                resultText.textContent = "Идеально! Вы настоящий эксперт в ЗОЖ!";
+            } else if (score >= quizData.length / 2) {
+                resultText.textContent = "Хороший результат! Вы знаете основы здорового образа жизни.";
+            } else {
+                resultText.textContent = "Стоит еще раз изучить материалы о здоровом образе жизни.";
+            }
+        }
+
+        initGame: loadQuestion();
+    </script>
+</body>
+</html>

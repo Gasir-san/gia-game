@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Викторина: Антиобщественное поведение</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #fdf2f2;
+            color: #7f1d1d;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { font-family: 'Unbounded', sans-serif; }
+
+        .quiz-card {
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .option-btn {
+            transition: all 0.2s ease;
+            background: #fcfcfc;
+            border: 2px solid #f1f1f1;
+            color: #4b5563;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #ef4444;
+            background: #fef2f2;
+            transform: translateY(-2px);
+        }
+
+        .option-btn.correct {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #15803d;
+        }
+
+        .option-btn.wrong {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #b91c1c;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #f1f1f1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ef4444;
+            transition: width 0.4s ease;
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <header class="text-center py-8">
+        <a href="index.html" class="text-red-600 hover:underline text-sm font-bold uppercase tracking-widest">← На главную</a>
+        <h1 class="text-2xl md:text-3xl font-bold mt-2 uppercase">Антиобщественное поведение</h1>
+    </header>
+
+    <main class="max-w-2xl w-full">
+        <div class="quiz-card p-6 md:p-10">
+            <!-- Прогресс -->
+            <div class="mb-8">
+                <div class="flex justify-between text-xs font-bold uppercase mb-2 text-slate-400">
+                    <span id="question-number">Вопрос 1 из 8</span>
+                    <span id="score-display">Очки: 0</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Область вопроса -->
+            <div id="quiz-content">
+                <h2 id="question-text" class="text-xl md:text-2xl font-bold mb-8">Загрузка вопроса...</h2>
+                <div id="options-grid" class="grid grid-cols-1 gap-4">
+                    <!-- Варианты ответов будут здесь -->
+                </div>
+            </div>
+
+            <!-- Экран результатов -->
+            <div id="result-screen" class="hidden text-center py-10">
+                <div id="result-icon" class="text-7xl mb-6">📢</div>
+                <h2 class="text-3xl font-black mb-2 uppercase">Тест завершен</h2>
+                <p id="result-text" class="text-slate-500 mb-8">Важен каждый выбор!</p>
+                <div class="bg-red-50 p-6 rounded-2xl mb-8">
+                    <div class="text-4xl font-black text-red-600" id="final-score">0/8</div>
+                    <div class="text-sm uppercase font-bold text-red-700">Правильных ответов</div>
+                </div>
+                <button onclick="location.reload()" class="bg-red-600 text-white px-10 py-4 rounded-full font-bold shadow-lg hover:bg-red-700 transition">Пройти заново</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizData = [
+            {
+                q: "Что из перечисленного является формой делинквентного (правонарушающего) поведения?",
+                o: ["Помощь родителям", "Мелкие кражи и вандализм", "Занятия в кружке", "Чтение книг"],
+                c: 1,
+                info: "Делинквентность включает порчу имущества, кражи, угоны и другие правонарушения."
+            },
+            {
+                q: "Как часто называют антиобщественное поведение подростков в психологии?",
+                o: ["Признак лидерства", "«Крик о помощи»", "Простое развлечение", "Способ заработка"],
+                c: 1,
+                info: "Часто это сигнал о семейном неблагополучии или психологических травмах."
+            },
+            {
+                q: "Что относится к виртуальной девиации (отклонению)?",
+                o: ["Поиск информации", "Кибербуллинг и троллинг", "Изучение программирования", "Просмотр мультфильмов"],
+                c: 1,
+                info: "Виртуальная девиация включает создание экстремистского контента и травлю в сети."
+            },
+            {
+                q: "К каким последствиям может привести антиобщественное поведение?",
+                o: ["К улучшению оценок", "К постановке на учет в КДН", "К победе в олимпиаде", "Ни к каким"],
+                c: 1,
+                info: "Поведение, нарушающее нормы, влечет за собой ответственность перед законом и комиссией."
+            },
+            {
+                q: "Что такое вандализм в рамках антиобщественного поведения?",
+                o: ["Занятие спортом", "Порча чужого имущества", "Посадка деревьев", "Поход в кино"],
+                c: 1,
+                info: "Вандализм — это умышленное разрушение или осквернение имущества."
+            },
+            {
+                q: "Аддиктивное поведение — это...",
+                o: ["Стремление к знаниям", "Зависимость (от игр, алкоголя, ПАВ)", "Любовь к животным", "Уважение к старшим"],
+                c: 1,
+                info: "Аддикции включают алкоголизм, наркоманию и игровую зависимость."
+            },
+            {
+                q: "Какое наказание предусмотрено в Казахстане за участие в массовых беспорядках?",
+                o: ["Похвала", "Уголовная ответственность", "Просто предупреждение", "Школьный выговор"],
+                c: 1,
+                info: "Насилие в отношении власти и беспорядки караются согласно уголовному кодексу РК."
+            },
+            {
+                q: "Что относится к аморальным действиям?",
+                o: ["Занятие спортом", "Нецензурная брань и бродяжничество", "Вежливое общение", "Соблюдение правил"],
+                c: 1,
+                info: "Аморальные действия нарушают нравственные нормы общества."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let canAnswer = true;
+
+        function loadQuestion() {
+            canAnswer = true;
+            const q = quizData[currentQuestion];
+            document.getElementById('question-number').textContent = `Вопрос ${currentQuestion + 1} из ${quizData.length}`;
+            document.getElementById('question-text').textContent = q.q;
+            document.getElementById('progress-fill').style.width = `${(currentQuestion / quizData.length) * 100}%`;
+            
+            const optionsGrid = document.getElementById('options-grid');
+            optionsGrid.innerHTML = '';
+            
+            q.o.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn p-4 rounded-2xl text-left font-medium';
+                btn.textContent = option;
+                btn.onclick = () => checkAnswer(index);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(idx) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const q = quizData[currentQuestion];
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            if (idx === q.c) {
+                buttons[idx].classList.add('correct');
+                score++;
+            } else {
+                buttons[idx].classList.add('wrong');
+                buttons[q.c].classList.add('correct');
+            }
+
+            document.getElementById('score-display').textContent = `Очки: ${score}`;
+
+            setTimeout(() => {
+                currentQuestion++;
+                if (currentQuestion < quizData.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1500);
+        }
+
+        function showResults() {
+            document.getElementById('progress-fill').style.width = '100%';
+            document.getElementById('quiz-content').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-score').textContent = `${score}/${quizData.length}`;
+            
+            const resultText = document.getElementById('result-text');
+            if (score === quizData.length) {
+                resultText.textContent = "Отлично! Вы хорошо понимаете правовые и социальные нормы.";
+            } else if (score >= quizData.length / 2) {
+                resultText.textContent = "Хороший результат. Помните, что каждый поступок имеет последствия.";
+            } else {
+                resultText.textContent = "Рекомендуем еще раз изучить материал о последствиях девиантного поведения.";
+            }
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
