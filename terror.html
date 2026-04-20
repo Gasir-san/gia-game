@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Блиц-опрос: Безопасность</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #020617;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        h1 { font-family: 'Unbounded', sans-serif; }
+
+        .timer-bar {
+            transition: width 1s linear;
+        }
+
+        .answer-btn {
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .answer-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(5px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .answer-btn.correct {
+            background: #166534 !important;
+            border-color: #22c55e !important;
+        }
+
+        .answer-btn.wrong {
+            background: #991b1b !important;
+            border-color: #ef4444 !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <!-- Интерфейс Квиза -->
+    <div id="quiz-container" class="w-full max-w-2xl bg-slate-900/50 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl relative">
+        
+        <!-- Заголовок и Прогресс -->
+        <div class="flex justify-between items-end mb-6">
+            <div>
+                <span class="text-rose-500 font-bold text-xs uppercase tracking-widest">Блиц-опрос</span>
+                <h2 class="text-xl font-bold">Противодействие терроризму</h2>
+            </div>
+            <div class="text-right">
+                <span id="question-number" class="text-2xl font-black text-white/20">01</span>
+                <span class="text-white/10 text-xl">/ 10</span>
+            </div>
+        </div>
+
+        <!-- Таймер -->
+        <div class="w-full h-1.5 bg-white/5 rounded-full mb-8 overflow-hidden">
+            <div id="timer-progress" class="timer-bar h-full bg-rose-500 w-full"></div>
+        </div>
+
+        <!-- Вопрос -->
+        <div id="question-text" class="text-2xl font-medium mb-8 min-h-[80px] fade-in">
+            Загрузка вопроса...
+        </div>
+
+        <!-- Ответы -->
+        <div id="answers-grid" class="grid grid-cols-1 gap-3">
+            <!-- Кнопки генерируются JS -->
+        </div>
+
+        <!-- Подсказка -->
+        <p class="mt-8 text-center text-slate-500 text-xs font-medium uppercase tracking-widest">
+            У вас 15 секунд на раздумья
+        </p>
+    </div>
+
+    <!-- Экран результатов -->
+    <div id="result-screen" class="hidden w-full max-w-xl text-center fade-in">
+        <h1 class="text-5xl font-black mb-4">РЕЗУЛЬТАТ</h1>
+        <div class="text-8xl font-black text-rose-500 mb-6" id="final-score">0/10</div>
+        <p class="text-slate-400 mb-10 text-lg" id="result-message">Нужно быть внимательнее к деталям безопасности.</p>
+        <button onclick="location.reload()" class="bg-white text-black px-12 py-4 rounded-full font-bold hover:bg-rose-500 hover:text-white transition-all">
+            ПОПРОБОВАТЬ СНОВА
+        </button>
+        <br>
+        <a href="index.html" class="inline-block mt-6 text-slate-500 hover:text-white underline text-sm">Вернуться в меню</a>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                q: "Что нужно сделать при обнаружении подозрительного предмета в общественном месте?",
+                a: ["Не трогать и немедленно сообщить охраннику или в полицию", "Попробовать аккуратно заглянуть внутрь", "Перенести его в безопасное место", "Сфотографировать со вспышкой"],
+                correct: 0
+            },
+            {
+                q: "По какому номеру телефона нужно звонить в случае угрозы теракта?",
+                a: ["101", "102 (или 112)", "103", "104"],
+                correct: 1
+            },
+            {
+                q: "Если вас захватили в заложники, какая стратегия поведения самая верная?",
+                a: ["Активно спорить и доказывать свою правоту", "Выполнять требования, не провоцировать на агрессию", "Попробовать сбежать при любой возможности", "Кричать и звать на помощь постоянно"],
+                correct: 1
+            },
+            {
+                q: "Что запрещено делать при получении угрозы по телефону?",
+                a: ["Класть трубку первым", "Запоминать голос и манеру речи", "Фиксировать время звонка", "Передавать информацию полиции"],
+                correct: 0
+            },
+            {
+                q: "При стрельбе в помещении первое действие это:",
+                a: ["Подойти к окну посмотреть, что происходит", "Лечь на пол и постараться укрыться за преградой", "Бежать навстречу звукам выстрелов", "Включить громкую музыку"],
+                correct: 1
+            },
+            {
+                q: "Безопасное расстояние от подозрительного пакета должно быть не менее:",
+                a: ["5 метров", "20 метров", "100 метров", "1000 метров"],
+                correct: 2
+            },
+            {
+                q: "Какое поведение в интернете может быть признаком вербовки?",
+                a: ["Предложения о дружбе от незнакомцев с навязчивыми идеями", "Рассылка мемов про котов", "Реклама спортивной одежды", "Сообщения от техподдержки сайта"],
+                correct: 0
+            },
+            {
+                q: "Что делать, если вы оказались в толпе в случае паники?",
+                a: ["Держать руки в карманах", "Скрестить руки на груди, выставив локти вперед", "Сесть на пол", "Идти против движения толпы"],
+                correct: 1
+            },
+            {
+                q: "Что такое экстремизм?",
+                a: ["Занятие экстремальными видами спорта", "Приверженность к крайним взглядам и мерам", "Любовь к острой еде", "Отказ от использования интернета"],
+                correct: 1
+            },
+            {
+                q: "Основная цель террористов при совершении теракта:",
+                a: ["Прославиться в соцсетях", "Устрашение населения и влияние на власть", "Получение спортивных достижений", "Просто напугать случайного человека"],
+                correct: 1
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 15;
+
+        const quizContainer = document.getElementById('quiz-container');
+        const resultScreen = document.getElementById('result-screen');
+        const qNumberDisp = document.getElementById('question-number');
+        const qTextDisp = document.getElementById('question-text');
+        const answersGrid = document.getElementById('answers-grid');
+        const timerBar = document.getElementById('timer-progress');
+
+        function startTimer() {
+            timeLeft = 15;
+            timerBar.style.transition = 'none';
+            timerBar.style.width = '100%';
+            
+            setTimeout(() => {
+                timerBar.style.transition = 'width 15s linear';
+                timerBar.style.width = '0%';
+            }, 50);
+
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    handleAnswer(-1); // Время вышло
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            if (currentQuestion >= questions.length) {
+                showResults();
+                return;
+            }
+
+            const q = questions[currentQuestion];
+            qNumberDisp.textContent = (currentQuestion + 1).toString().padStart(2, '0');
+            qTextDisp.textContent = q.q;
+            qTextDisp.classList.remove('fade-in');
+            void qTextDisp.offsetWidth; // Триггер анимации
+            qTextDisp.classList.add('fade-in');
+
+            answersGrid.innerHTML = '';
+            q.a.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn w-full p-4 rounded-2xl text-left font-semibold text-slate-300 hover:text-white';
+                btn.textContent = option;
+                btn.onclick = () => handleAnswer(index);
+                answersGrid.appendChild(btn);
+            });
+
+            startTimer();
+        }
+
+        function handleAnswer(index) {
+            clearInterval(timer);
+            const correctIndex = questions[currentQuestion].correct;
+            const buttons = answersGrid.querySelectorAll('button');
+
+            buttons.forEach(btn => btn.disabled = true);
+
+            if (index === correctIndex) {
+                buttons[index].classList.add('correct');
+                score++;
+            } else if (index !== -1) {
+                buttons[index].classList.add('wrong');
+                buttons[correctIndex].classList.add('correct');
+            } else {
+                // Время вышло
+                buttons[correctIndex].classList.add('correct');
+            }
+
+            setTimeout(() => {
+                currentQuestion++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            document.getElementById('final-score').textContent = `${score}/10`;
+            
+            const msg = document.getElementById('result-message');
+            if (score === 10) msg.textContent = "Превосходно! Вы настоящий эксперт в вопросах безопасности.";
+            else if (score > 6) msg.textContent = "Хороший результат, но есть моменты, которые стоит закрепить.";
+            else msg.textContent = "Тема очень серьезная. Рекомендуем изучить материалы раздела еще раз.";
+        }
+
+        // Запуск
+        loadQuestion();
+    </script>
+</body>
+</html>
